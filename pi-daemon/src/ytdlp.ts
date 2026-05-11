@@ -4,9 +4,13 @@ import { config } from "./config";
 export function resolveAudioUrl(videoId: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+    const args = ["-g", "-f", "bestaudio", "--no-playlist", url];
+    if (config.ytdlpCookiesFile) {
+      args.unshift("--cookies", config.ytdlpCookiesFile);
+    }
     execFile(
       config.ytdlpBinary,
-      ["-g", "-f", "bestaudio", "--no-playlist", url],
+      args,
       { timeout: 30_000 },
       (err, stdout, stderr) => {
         if (err) {

@@ -52,7 +52,10 @@ function toDetails(info: any): YouTubeVideoDetails | null {
 }
 
 async function ytdlp(args: string[]): Promise<string> {
-  const { stdout } = await execFileAsync(config.ytdlpBinary, args, {
+  const fullArgs = config.ytdlpCookiesFile
+    ? ["--cookies", config.ytdlpCookiesFile, ...args]
+    : args;
+  const { stdout } = await execFileAsync(config.ytdlpBinary, fullArgs, {
     timeout: 30_000,
     maxBuffer: 16 * 1024 * 1024,
   });

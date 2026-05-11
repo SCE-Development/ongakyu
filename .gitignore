@@ -4,5 +4,8 @@ dist/
 .env.local
 *.db
 *.db-journal
-website.png
-plan.md
+.vite/
+*.webm
+*.mp4
+*.m4a
+*.part

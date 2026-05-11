@@ -59,6 +59,7 @@ See [`pi-daemon/README.md`](pi-daemon/README.md). Quick version: install `mpv` +
 | `PI_BRIDGE_SECRET` | yes      | Must match the Pi daemon's `PI_BRIDGE_SECRET`               |
 | `PI_WS_PATH`       | no       | Defaults to `/ws/pi`                                        |
 | `YTDLP_BIN`        | no       | Path to `yt-dlp` binary (defaults to `yt-dlp` on `$PATH`)   |
+| `YTDLP_COOKIES_FILE` | no     | Absolute path to a Netscape-format `cookies.txt` for yt-dlp. Needed when YouTube returns "Sign in to confirm you're not a bot." Export from a logged-in browser (use a burner Google account) with an extension like "Get cookies.txt LOCALLY". The Pi daemon honors the same variable. |
 
 ## API
 

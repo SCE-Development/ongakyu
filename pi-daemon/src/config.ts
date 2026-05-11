@@ -11,6 +11,7 @@ export const config = {
   mpvAudioOut: process.env.MPV_AUDIO_OUT || "alsa",
   mpvAudioDevice: process.env.MPV_AUDIO_DEVICE || "",
   ytdlpBinary: process.env.YTDLP_BIN || "yt-dlp",
+  ytdlpCookiesFile: process.env.YTDLP_COOKIES_FILE || "",
   reconnectBaseMs: 1000,
   reconnectMaxMs: 30_000,
   positionReportMs: 1000,
