@@ -1,0 +1,18 @@
+[Unit]
+Description=OngaKyuu Pi daemon (mpv + yt-dlp WebSocket bridge)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/ongakyu/pi-daemon
+EnvironmentFile=/home/pi/ongakyu/pi-daemon/.env
+ExecStart=/home/pi/.nvm/versions/node/v20.20.2/bin/node dist/index.js
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

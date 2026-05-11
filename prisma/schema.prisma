@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Singleton row (id always "current"). Tracks what the Pi is playing.
+model PlayerState {
+  id            String   @id @default("current")
+  videoId       String?  @map("video_id")
+  title         String?
+  channelTitle  String?  @map("channel_title")
+  thumbnailUrl  String?  @map("thumbnail_url")
+  durationMs    Int?     @map("duration_ms")
+  positionMs    Int      @default(0) @map("position_ms")
+  isPlaying     Boolean  @default(false) @map("is_playing")
+  volumePercent Int      @default(50) @map("volume_percent")
+  piConnected   Boolean  @default(false) @map("pi_connected")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("player_state")
+}
+
+model QueueItem {
+  id           String    @id @default(uuid())
+  videoId      String    @map("video_id")
+  title        String
+  channelTitle String    @map("channel_title")
+  thumbnailUrl String    @map("thumbnail_url")
+  durationSec  Int       @map("duration_sec")
+  position     Int
+  createdAt    DateTime  @default(now()) @map("created_at")
+  playedAt     DateTime? @map("played_at")
+
+  @@index([playedAt, position])
+  @@map("queue_items")
+}
+

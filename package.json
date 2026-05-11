@@ -1,0 +1,5 @@
+{
+  "name": "ongakyu",
+  "private": true,
+  "workspaces": ["frontend", "backend"]
+}
