@@ -1,6 +1,6 @@
-# OngaKyu
+# OngaKyu - 音ガキュウ
 
-Web UI for a shared speaker. Anyone with the URL can search YouTube, queue tracks, and control playback on a Raspberry Pi.
+Basic Web UI for people to use easily. Users can search things on YouTube then have it played on a Raspberry Pi.
 
 ```
 [Browser] ──► [Backend (Express + SQLite)] ──WebSocket──► [Pi (mpv + yt-dlp)]
