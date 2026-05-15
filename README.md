@@ -1,4 +1,4 @@
-# OngaKyu - 音ガキュウ
+# OngaKyu - 音楽キュウ
 
 Basic Web UI for people to use easily. Users can search things on YouTube then have it played on a Raspberry Pi.
 
