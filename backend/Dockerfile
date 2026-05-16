@@ -10,9 +10,17 @@ COPY backend/package.json ./backend/
 # get all npm packages and set to port 3001
 RUN npm install
 
-COPY backend ./backend
 COPY prisma ./prisma
+
+# generate prisma client
+RUN npx prisma generate
+
+COPY backend ./backend
+
+# compile TypeScript
+RUN npm --workspace backend run build
 
 EXPOSE 3001
 
-CMD ["npm", "--workspace", "backend", "run", "start"] # start backend
+# start backend
+CMD ["npm", "--workspace", "backend", "run", "start"]
