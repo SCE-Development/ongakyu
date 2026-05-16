@@ -3,6 +3,12 @@ FROM node:20-slim
 # set workdir in container to app
 WORKDIR /app
 
+# install yt-dlp
+RUN apt-get update && apt-get install -y curl python3 && \
+    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # copy npm package list to workdir
 COPY package.json package-lock.json ./
 COPY backend/package.json ./backend/
