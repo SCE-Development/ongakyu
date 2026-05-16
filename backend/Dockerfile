@@ -1,17 +1,18 @@
 #get nodejs 20 linux image
 FROM node:20-slim
 # set workdir in container to app
-WORKDIR /app 
+WORKDIR /app
 
 # copy npm package list to workdir
 COPY package.json package-lock.json ./
-copy backend/package.json ./backend/
+COPY backend/package.json ./backend/
 
+# get all npm packages and set to port 3001
+RUN npm install
 
-RUN npm install 
-COPY backend ./package
-COPY prism ./prisma
-# get all npm packages and set to port 3000
-EXPOSE 3000
+COPY backend ./backend
+COPY prisma ./prisma
 
-CMD {"npm","--workspace","backend", "run", "start"} # start backend
+EXPOSE 3001
+
+CMD ["npm", "--workspace", "backend", "run", "start"] # start backend

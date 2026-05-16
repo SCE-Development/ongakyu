@@ -2,7 +2,7 @@ FROM node:20-slim AS build
 
 WORKDIR /app
 
-COPY package.json package-lock.json
+COPY package.json package-lock.json ./
 
 COPY frontend/package.json ./frontend/
 run npm install
