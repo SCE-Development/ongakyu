@@ -1,90 +1,101 @@
 # OngaKyu - 音楽キュウ
 
-Basic Web UI for people to use easily. Users can search things on YouTube then have it played on a Raspberry Pi.
+Basic Web UI for people to use easily. Users can search things on YouTube then have it played on Raspberry Pi.
 
 ```
-[Browser] ──► [Backend (Express + SQLite)] ──WebSocket──► [Pi (mpv + yt-dlp)]
+[Browser] ──► [Frontend (Nginx)] ──► [Backend (Express + SQLite)] ──WebSocket──► [Pi (mpv + yt-dlp)]
 ```
 
-The backend serves the frontend, calls `yt-dlp` for search/metadata, and forwards playback commands to the Pi over a WebSocket. The Pi opens the connection outbound, so no inbound firewall holes are needed.
+The Pi opens a WebSocket connection outbound, so no inbound firewall holes are needed. When something gets played, `yt-dlp` fetches the audio stream URL from YouTube and hands it to `mpv`, which streams it directly through ALSA to the speakers so nothin needs to be saved on the Pi with limited storage. Yt-dlp needs a netscape format cookie file depending on the IP address to avoid bot detection. In this case the cookie file is needed because the backend is ran off a server SSH tunneled to Oracle cloud.
 
-## Prerequisites
-
-- Node.js 20+
-- `yt-dlp` on `$PATH` (used by the backend for search/metadata and by the Pi for audio streams)
-- `mpv` on the Pi for playback
-
-## Setup
+## Run (Docker)
 
 ```bash
 git clone https://github.com/SCE-Development/ongakyu.git
 cd ongakyu
+cp backend/.env.example backend/.env  # set PI_BRIDGE_SECRET
+docker compose up -d
+```
+
+Frontend on `:80`, backend API on `:3001`.
+
+## Run (For Local Testing)
+
+Requires Node.js 20+ and `yt-dlp` on `$PATH`.
+
+```bash
 npm install
-
-cp backend/.env.example backend/.env   # edit PI_BRIDGE_SECRET
-
+cp backend/.env.example backend/.env
 npx -w backend prisma db push --schema=../prisma/schema.prisma
 npm -w backend run db:seed
+npm -w backend run dev    # :3001
+npm -w frontend run dev   # :5173
 ```
-
-## Run (dev)
-
-```bash
-npm -w backend run dev    # http://localhost:3001
-npm -w frontend run dev   # http://localhost:5173
-```
-
-## Run (prod, with PM2)
-
-```bash
-npm -w backend run build
-npm -w frontend run build
-pm2 start ecosystem.config.cjs
-```
-
-The backend serves `frontend/dist` as static files, so one process is enough.
 
 ## Raspberry Pi setup
 
-See [`pi-daemon/README.md`](pi-daemon/README.md). Quick version: install `mpv` + `yt-dlp` + Node 20, `npm install && npm run build` in `pi-daemon/`, set `ORACLE_WS_URL` and `PI_BRIDGE_SECRET` in its `.env`, install the bundled systemd unit.
+```bash
+sudo apt install -y mpv python3-pip
+sudo pip3 install -U yt-dlp
+
+# Node 20 via nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.nvm/nvm.sh && nvm install 20
+
+git clone https://github.com/SCE-Development/ongakyu.git ~/ongakyu
+cd ~/ongakyu/pi-daemon
+npm install && npm run build
+cp .env.example .env  # need to manually enter ORACLE_WS_URL and PI_BRIDGE_SECRET
+# to generate secret, you can do "openssl rand -hex 32"
+sudo cp systemd/ongakyu-pi.service /etc/systemd/system/ # moves premade systemctl daemon to custom unit file dir
+sudo systemctl daemon-reload && sudo systemctl enable --now ongakyu-pi
+```
 
 ## Environment
 
 `backend/.env`:
 
-| Variable           | Required | Notes                                                       |
-|--------------------|----------|-------------------------------------------------------------|
-| `DATABASE_URL`     | yes      | SQLite path, e.g. `file:./dev.db`                           |
-| `PORT`             | no       | Defaults to `3001`                                          |
-| `PI_BRIDGE_SECRET` | yes      | Must match the Pi daemon's `PI_BRIDGE_SECRET`               |
-| `PI_WS_PATH`       | no       | Defaults to `/ws/pi`                                        |
-| `YTDLP_BIN`        | no       | Path to `yt-dlp` binary (defaults to `yt-dlp` on `$PATH`)   |
-| `YTDLP_COOKIES_FILE` | no     | Absolute path to a Netscape-format `cookies.txt` for yt-dlp. Needed when YouTube returns "Sign in to confirm you're not a bot." Export from a logged-in browser (use a burner Google account) with an extension like "Get cookies.txt LOCALLY". The Pi daemon honors the same variable. |
+| Variable             | Required | Notes |
+|----------------------|----------|-------|
+| `DATABASE_URL`       | yes      | SQLite path, e.g. `file:./dev.db` |
+| `PI_BRIDGE_SECRET`   | yes      | Must match Pi daemon |
+| `PORT`               | no       | Defaults to `3001` |
+| `PI_WS_PATH`         | no       | Defaults to `/ws/pi` |
+| `YTDLP_BIN`          | no       | Path to `yt-dlp` (defaults to `$PATH`) |
+| `YTDLP_COOKIES_FILE` | no       | Netscape `cookies.txt` — needed for YouTube bot-checks |
+
+`pi-daemon/.env`:
+
+| Variable           | Required | Notes |
+|--------------------|----------|-------|
+| `ORACLE_WS_URL`    | yes      | e.g. `wss://host/ws/pi` |
+| `PI_BRIDGE_SECRET` | yes      | Must match backend |
+| `MPV_SOCKET`       | no       | Defaults to `/tmp/mpv-socket` |
+| `MPV_BIN`          | no       | Defaults to `mpv` |
+| `YTDLP_BIN`        | no       | Defaults to `yt-dlp` |
 
 ## API
 
-All endpoints are open — anyone who can reach the backend can control the player.
-
-| Method | Path                          | What                       |
-|--------|-------------------------------|----------------------------|
-| GET    | `/api/player/state`           | Current track + Pi status  |
-| GET    | `/api/player/queue`           | Queue + currently playing  |
-| POST   | `/api/player/queue`           | Add `{ videoId }`          |
-| DELETE | `/api/player/queue/:id`       | Remove queue item          |
-| POST   | `/api/player/play`            | Resume, or play `videoId`  |
-| POST   | `/api/player/pause`           | Pause                      |
-| POST   | `/api/player/next`            | Skip                       |
-| PUT    | `/api/player/volume`          | `{ volumePercent: 0..100 }`|
-| GET    | `/api/search?q=...`           | yt-dlp search              |
-| WS     | `/ws/pi?token=<secret>`       | Pi daemon connects here    |
+| Method | Path                    | Description |
+|--------|-------------------------|-------------|
+| GET    | `/api/player/state`     | Current track + Pi status |
+| GET    | `/api/player/queue`     | Queue + currently playing |
+| POST   | `/api/player/queue`     | Add `{ videoId }` |
+| DELETE | `/api/player/queue/:id` | Remove queue item |
+| POST   | `/api/player/play`      | Resume or play `{ videoId }` |
+| POST   | `/api/player/pause`     | Pause |
+| POST   | `/api/player/next`      | Skip |
+| PUT    | `/api/player/volume`    | `{ volumePercent: 0..100 }` |
+| GET    | `/api/search?q=...`     | YouTube search via yt-dlp |
+| WS     | `/ws/pi?token=<secret>` | Pi daemon endpoint |
 
 ## Layout
 
 ```
 ongakyu/
-├── frontend/    React + Vite, single page
-├── backend/     Express + Prisma/SQLite + Pi WebSocket bridge
-├── pi-daemon/   Pi-side daemon (mpv + yt-dlp)
+├── frontend/    React + Vite
+├── backend/     Express + Prisma/SQLite + WebSocket bridge
+├── pi-daemon/   Pi-side daemon (mpv + yt-dlp + systemd)
 └── prisma/      Schema + seed
 ```
 
