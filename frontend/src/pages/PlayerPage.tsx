@@ -86,7 +86,7 @@ export default function PlayerPage() {
   });
 
   const queueMutation = useMutation({
-    mutationFn: (videoId: string) => api.addToQueue(videoId),
+    mutationFn: (video: YouTubeSearchResult) => api.addToQueue(video),
     onSuccess: () => {
       showMsg("success", "Added to queue");
       setTimeout(() => {
@@ -381,7 +381,7 @@ export default function PlayerPage() {
                   <p className="text-xs text-gray-500 truncate">{item.channelTitle}</p>
                 </div>
                 <button
-                  onClick={() => queueMutation.mutate(item.videoId)}
+                  onClick={() => queueMutation.mutate(item)}
                   className="opacity-0 group-hover:opacity-100 px-3 py-1 text-xs bg-sce-accent/20 text-sce-accent rounded-full hover:bg-sce-accent/30 transition"
                 >
                   + Queue

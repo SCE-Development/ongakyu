@@ -51,7 +51,16 @@ router.post("/queue", async (req: Request, res: Response) => {
     return;
   }
   try {
-    const video = await resolveVideo(videoId);
+    const { title, channelTitle, thumbnailUrl, durationSec } = req.body;
+    const hasDetails =
+      typeof title === "string" &&
+      typeof channelTitle === "string" &&
+      typeof thumbnailUrl === "string" &&
+      typeof durationSec === "number";
+
+    const video = hasDetails
+      ? { videoId, title, channelTitle, thumbnailUrl, durationSec }
+      : await resolveVideo(videoId);
     const item = await enqueue(video);
 
     const state = await getState();

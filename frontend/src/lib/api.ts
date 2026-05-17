@@ -23,10 +23,10 @@ export const api = {
     }),
   pause: () => request("/player/pause", { method: "POST" }),
   next: () => request("/player/next", { method: "POST" }),
-  addToQueue: (videoId: string) =>
+  addToQueue: (video: YouTubeSearchResult) =>
     request<{ item: QueueItem }>("/player/queue", {
       method: "POST",
-      body: JSON.stringify({ videoId }),
+      body: JSON.stringify(video),
     }),
   removeFromQueue: (id: string) =>
     request(`/player/queue/${id}`, { method: "DELETE" }),
