@@ -28,5 +28,5 @@ RUN npm --workspace backend run build
 
 EXPOSE 3001
 
-# start backend
-CMD ["npm", "--workspace", "backend", "run", "start"]
+# push schema then start backend
+CMD ["sh", "-c", "npx prisma db push --skip-generate && npm --workspace backend run start"]
